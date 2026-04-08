@@ -1,27 +1,52 @@
-CXX := g++
-CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -pedantic
-TARGET := pa1_sorting
+CXX = g++
+CXXFLAGS = -Wall -Wextra -pedantic -std=c++17 -O0 -Isrc
+
+SRC_DIR = src
+OBJ_DIR = obj
+NAME = sort_benchmark
+
+ifeq ($(OS),Windows_NT)
+    RM = del /Q
+    RMDIR = rmdir /S /Q
+    MKDIR = mkdir
+else
+    RM = rm -f
+    RMDIR = rm -rf
+    MKDIR = mkdir -p
+endif
 
 SRCS := $(wildcard src/*.cpp)
 
-OBJS := $(SRCS:.cpp=.o)
 
-all: $(TARGET)
+OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
+all: $(NAME)
 
-%.o: %.cpp
+$(NAME): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+ifeq ($(OS),Windows_NT)
+	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+else
+	@mkdir -p $(OBJ_DIR)
+endif
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-run: $(TARGET)
-	./$(TARGET)
 
 clean:
 ifeq ($(OS),Windows_NT)
-	powershell -NoProfile -Command "Remove-Item -Force -ErrorAction SilentlyContinue 'src\\*.o', '$(TARGET)'; exit 0"
+	-$(RMDIR) $(OBJ_DIR)
 else
-	rm -f $(OBJS) $(TARGET)
+	$(RMDIR) $(OBJ_DIR)
 endif
 
-.PHONY: all run clean
+fclean: clean
+ifeq ($(OS),Windows_NT)
+	-$(RM) $(NAME).exe
+else
+	$(RM) $(NAME)
+endif
+
+re: fclean all
+
+.PHONY: all clean fclean re
