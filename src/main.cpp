@@ -2,6 +2,7 @@
 #include "heap_sort.h"
 #include "merge_sort.h"
 #include "quick_sort.h"
+#include "radix_sort.h"
 
 #include <iostream>
 #include <string>
@@ -17,5 +18,7 @@ int main()
   heapSortAnalysis(sizes, trials);
   std::cout << std::string(90, '-') << std::endl;
   countingSortAnalysis(sizes, trials);
+  std::cout << std::string(90, '-') << std::endl;
+  radixSortAnalysis(sizes, trials);
   return 0;
 }

@@ -93,3 +93,41 @@ still $i$ before $j$.
 If you place left-to-right using the same prefix-sum decrement logic, equal keys get reversed: earlier
 occurrences consume later slots and later occurrences move in front of them. That makes the sort
 unstable.
+
+## Task E - Radix Sort
+
+### Analysis Question 12
+
+For LSD radix sort, complexity is $O(d\times(n+b))$, where $d$ is number of digit passes and $b$ is
+base. Choosing base changes both $d$ and per-pass cost:
+
+1. Larger base: fewer passes ($d$ decreases), but bigger counting array and more per-pass memory work
+2. Smaller base: more passes ($d$ increases), but each pass is cheaper and uses less extra memory
+
+So the tradeoff is passes vs per-pass overhead/cache behavior.
+
+In this task, base 10 and $\text{maxVal}=99999$ gives computed $d=5$. Measured at $n=32000$:
+
+1. Radix (base 10): 2191.333 us
+2. Merge sort: 7062.333 us
+3. Heap sort: 7786.667 us
+4. Counting sort with $k=99999$: 934.667 us
+
+This shows radix was clearly faster than comparison sorts for this key range, but still slower than
+single-pass counting sort because counting sort pays one $O(n+k)$ pass while radix pays about 5 passes
+of stable digit sorting.
+
+### Analysis Question 13
+
+Each digit pass must be stable so that ordering decided by less-significant digits is preserved when
+sorting by the next digit.
+
+Counterexample (base 10, two-digit numbers):
+
+1. Input: [21, 22, 11, 12]
+2. After stable ones-digit pass: [21, 11, 22, 12]
+3. Tens-digit groups are now 1x then 2x if pass is stable, giving final [11, 12, 21, 22]
+
+If the tens-digit pass is unstable, elements with tens digit 1 (11, 12) might be reordered to
+[12, 11], and tens digit 2 (21, 22) might become [22, 21], producing [12, 11, 22, 21], which is not
+fully sorted.
