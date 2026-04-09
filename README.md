@@ -2,16 +2,11 @@
 
 to compile use g++
 
-Build
-
-```sh
-make
-```
-
 Run
 
 ```sh
-make run
+make
+./sort_benchmark.exe
 ```
 
 Clean
