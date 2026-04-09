@@ -1,3 +1,4 @@
+#include "counting_sort.h"
 #include "heap_sort.h"
 #include "merge_sort.h"
 #include "quick_sort.h"
@@ -14,5 +15,7 @@ int main()
   mergeSortAnalysis(sizes, trials);
   std::cout << std::string(90, '-') << std::endl;
   heapSortAnalysis(sizes, trials);
+  std::cout << std::string(90, '-') << std::endl;
+  countingSortAnalysis(sizes, trials);
   return 0;
 }

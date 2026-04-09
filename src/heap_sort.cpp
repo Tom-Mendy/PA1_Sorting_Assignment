@@ -66,20 +66,6 @@ static double timeSortFunction(void (*sortFunc)(std::vector<int> &),
   return static_cast<double>(totalUs) / trials;
 }
 
-long long averageHeapSwaps(const std::vector<int> &base, int trials)
-{
-  long long totalSwaps = 0;
-
-  for (int t = 0; t < trials; ++t) {
-    std::vector<int> data = base;
-    resetHeapSortSwapCount();
-    heapSort(data);
-    totalSwaps += getHeapSortSwapCount();
-  }
-
-  return totalSwaps / trials;
-}
-
 void heapSort(std::vector<int> &A)
 {
   int n = static_cast<int>(A.size());
@@ -100,6 +86,20 @@ void heapSort(std::vector<int> &A)
 long long getHeapSortSwapCount() { return g_swaps; }
 
 void resetHeapSortSwapCount() { g_swaps = 0; }
+
+long long averageHeapSwaps(const std::vector<int> &base, int trials)
+{
+  long long totalSwaps = 0;
+
+  for (int t = 0; t < trials; ++t) {
+    std::vector<int> data = base;
+    resetHeapSortSwapCount();
+    heapSort(data);
+    totalSwaps += getHeapSortSwapCount();
+  }
+
+  return totalSwaps / trials;
+}
 
 void heapSortAnalysis(const std::vector<int> &sizes, int trials)
 {
