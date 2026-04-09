@@ -131,3 +131,31 @@ Counterexample (base 10, two-digit numbers):
 If the tens-digit pass is unstable, elements with tens digit 1 (11, 12) might be reordered to
 [12, 11], and tens digit 2 (21, 22) might become [22, 21], producing [12, 11, 22, 21], which is not
 fully sorted.
+
+## Task F - Benchmarking
+
+### Method
+
+1. Timer: `std::chrono::high_resolution_clock`
+2. Unit: microseconds (us)
+3. Repetitions: 3 runs per (algorithm, n), reported value is median of 3
+4. Fairness: each run sorts a fresh copy of the same original array
+5. Reproducibility: fixed seed formula `seedBase + n` with `seedBase = 2026`
+6. Build mode: `-O0` (already set in Makefile)
+
+### Input Sizes
+
+1. Comparison sorts (Quick, Merge, Heap), unique input: 1000, 5000, 10000, 50000
+2. Non-comparison sorts (Counting, Radix), non-unique input: 10000, 50000, 100000, 500000
+
+For non-comparison benchmarks, `maxVal = 100000` was used.
+
+### Results Table (median, us)
+
+| Algorithm | n=1,000 | n=5,000 | n=10,000 | n=50,000 | n=100,000 | n=500,000 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Quick Sort | 88 | 521 | 1092 | 6694 | - | - |
+| Merge Sort | 157 | 972 | 2084 | 12292 | - | - |
+| Heap Sort | 165 | 1024 | 2220 | 13193 | - | - |
+| Counting Sort | - | - | 755 | 1196 | 1766 | 7699 |
+| Radix Sort | - | - | 828 | 4516 | 9110 | 45182 |
