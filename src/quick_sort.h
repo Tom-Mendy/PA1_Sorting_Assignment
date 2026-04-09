@@ -3,6 +3,7 @@
 
 #include <vector>
 
-void quickSort(std::vector<int>& A);
+void quickSort(std::vector<int> &A);
+void quickSortAnalysis(const std::vector<int> &sizes, int trials);
 
 #endif
