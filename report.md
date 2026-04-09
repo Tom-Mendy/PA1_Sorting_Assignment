@@ -1,161 +1,65 @@
-# Algorithm Tasks
+# Section 5 - Written Report
 
-## Task B - Merge Sort
+## 5.1 Completed Benchmarking Table (Section 4.3)
 
-### Analysis Question 6
-
-Measured comparison counts scale proportionally to $n \log_2 n$. When you normalize by computing
-$\frac{\text{comparisons}}{n\log_2 n}$, the value stays within a relatively small band as $n$ grows,
-which matches the theoretical bound for merge sort.
-
-### Analysis Question 7
-
-Merge sort is always $O(n \log n)$ because it always splits the input into two halves and performs
-linear-time merging at each recursion level. There are about $\log_2 n$ levels and each level does
-$O(n)$ work, so total work is always $O(n \log n)$ regardless of input order.
-
-Quick sort is not always $O(n \log n)$ because partition quality depends on pivot position. If pivots
-are consistently poor (for example, producing highly unbalanced partitions), recursion depth can grow
-to $O(n)$ and total work becomes $O(n^2)$.
-
-## Task C - Heap Sort
-
-### Analysis Question 8
-
-Heap sort stayed in $O(n \log n)$ on all tested inputs, but on random data it was slower than quick
-sort in practice.
-
-Random-input timings (largest size):
-
-1. Quick sort at $n=32000$: about 4635 us
-2. Heap sort at $n=32000$: about 7789 us
-
-So heap sort took about $\frac{7789}{4635} \approx 1.68\times$ as long on that case.
-
-This matches the common practical behavior: heap sort does more data movement (frequent swaps while
-sifting), has less cache-friendly memory access due to jumping across heap levels, and has tighter
-branch-dependent control flow. Quick sort on random input tends to have better locality and fewer
-expensive movements, so constants are smaller even though both are $O(n \log n)$ asymptotically.
-
-### Analysis Question 9
-
-Measured heap sort swap counts on random input were:
-
-1. $n=1000$: 9107 swaps
-2. $n=2000$: 20232 swaps
-3. $n=4000$: 44265 swaps
-4. $n=8000$: 96564 swaps
-5. $n=16000$: 209177 swaps
-6. $n=32000$: 450582 swaps
-
-The normalized ratio $\frac{\text{swaps}}{n\log_2 n}$ stayed near a constant band (about $0.91$ to
-$0.94$), so the observed swap count is proportional to $n \log n$ on random input.
-
-For equal-input arrays, swaps were exactly $n-1$ in these runs (999, 1999, 3999, ...), because each
-extract-max step swaps root with the end, while sift-down performs no extra swaps when all keys are
-equal. So for that special case, swap growth is linear in $n$.
-
-## Task D - Counting Sort
-
-### Analysis Question 10
-
-Counting sort has cost $O(n + k)$, so it beats $O(n \log n)$ sorts when $k$ is not too large
-compared with $n$ and the key range is dense enough to justify the count array.
-
-From measurements on non-unique input with $\text{maxVal}=1000$ ($k=1000$):
-
-1. At $n=32000$, counting sort was about 351.667 us
-2. At $n=32000$, merge sort was about 6875.333 us
-3. At $n=32000$, heap sort was about 7764.000 us
-
-So with small fixed $k$, counting sort was around $19.6\times$ faster than merge sort and
-$22.1\times$ faster than heap sort on this run.
-
-To see when $k$ becomes impractical, I swept $k$ at fixed $n=32000$:
-
-1. $k=1000$: 340.333 us, count array 4004 bytes
-2. $k=10000$: 407.333 us, count array 40004 bytes
-3. $k=100000$: 946.333 us, count array 400004 bytes
-4. $k=1000000$: 7430.000 us, count array 4000004 bytes
-
-At $k=10^6$, counting sort time was roughly the same as merge sort at this $n$, so the practical
-advantage largely disappeared. In general, counting sort becomes impractical when $k$ is large enough
-that both memory $(k+1)$ and initialization/scan time for the count array dominate.
-
-### Analysis Question 11
-
-Counting sort is stable when placing right-to-left because equal values are written in reverse
-encounter order into the final open positions, which restores their original left-to-right order.
-More concretely, if two equal keys appear at indices $i < j$, the element at $j$ is placed first into
-the last slot for that key, then the element at $i$ goes into the previous slot, so the final order is
-still $i$ before $j$.
-
-If you place left-to-right using the same prefix-sum decrement logic, equal keys get reversed: earlier
-occurrences consume later slots and later occurrences move in front of them. That makes the sort
-unstable.
-
-## Task E - Radix Sort
-
-### Analysis Question 12
-
-For LSD radix sort, complexity is $O(d\times(n+b))$, where $d$ is number of digit passes and $b$ is
-base. Choosing base changes both $d$ and per-pass cost:
-
-1. Larger base: fewer passes ($d$ decreases), but bigger counting array and more per-pass memory work
-2. Smaller base: more passes ($d$ increases), but each pass is cheaper and uses less extra memory
-
-So the tradeoff is passes vs per-pass overhead/cache behavior.
-
-In this task, base 10 and $\text{maxVal}=99999$ gives computed $d=5$. Measured at $n=32000$:
-
-1. Radix (base 10): 2191.333 us
-2. Merge sort: 7062.333 us
-3. Heap sort: 7786.667 us
-4. Counting sort with $k=99999$: 934.667 us
-
-This shows radix was clearly faster than comparison sorts for this key range, but still slower than
-single-pass counting sort because counting sort pays one $O(n+k)$ pass while radix pays about 5 passes
-of stable digit sorting.
-
-### Analysis Question 13
-
-Each digit pass must be stable so that ordering decided by less-significant digits is preserved when
-sorting by the next digit.
-
-Counterexample (base 10, two-digit numbers):
-
-1. Input: [21, 22, 11, 12]
-2. After stable ones-digit pass: [21, 11, 22, 12]
-3. Tens-digit groups are now 1x then 2x if pass is stable, giving final [11, 12, 21, 22]
-
-If the tens-digit pass is unstable, elements with tens digit 1 (11, 12) might be reordered to
-[12, 11], and tens digit 2 (21, 22) might become [22, 21], producing [12, 11, 22, 21], which is not
-fully sorted.
-
-## Task F - Benchmarking
-
-### Method
-
-1. Timer: `std::chrono::high_resolution_clock`
-2. Unit: microseconds (us)
-3. Repetitions: 3 runs per (algorithm, n), reported value is median of 3
-4. Fairness: each run sorts a fresh copy of the same original array
-5. Reproducibility: fixed seed formula `seedBase + n` with `seedBase = 2026`
-6. Build mode: `-O0` (already set in Makefile)
-
-### Input Sizes
-
-1. Comparison sorts (Quick, Merge, Heap), unique input: 1000, 5000, 10000, 50000
-2. Non-comparison sorts (Counting, Radix), non-unique input: 10000, 50000, 100000, 500000
-
-For non-comparison benchmarks, `maxVal = 100000` was used.
-
-### Results Table (median, us)
+Measured runtimes below are medians of 3 runs, in microseconds.
 
 | Algorithm | n=1,000 | n=5,000 | n=10,000 | n=50,000 | n=100,000 | n=500,000 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Quick Sort | 88 | 521 | 1092 | 6694 | - | - |
-| Merge Sort | 157 | 972 | 2084 | 12292 | - | - |
-| Heap Sort | 165 | 1024 | 2220 | 13193 | - | - |
-| Counting Sort | - | - | 755 | 1196 | 1766 | 7699 |
-| Radix Sort | - | - | 828 | 4516 | 9110 | 45182 |
+| Quick Sort | 84 | 564 | 1098 | 6818 | - | - |
+| Merge Sort | 160 | 996 | 2070 | 12243 | - | - |
+| Heap Sort | 165 | 1258 | 2213 | 13380 | - | - |
+| Counting Sort | - | - | 781 | 1219 | 1813 | 8518 |
+| Radix Sort | - | - | 846 | 4540 | 9505 | 52279 |
+
+## 5.2 Log-Log Plot for Comparison Sorts
+
+![Log-log runtime plot for quick, merge, and heap sort](comparison_loglog.svg)
+
+The three curves are close to straight lines on log-log axes, which is what we expect for near-polynomial growth. Using the first and last points, the fitted slopes are approximately $1.124$ (Quick), $1.109$ (Merge), and $1.124$ (Heap). This is consistent with $O(n \log n)$ behavior over finite ranges: the extra $\log n$ factor makes the observed slope slightly above $1$ instead of exactly $1$. A second check also agrees: $\frac{t}{n\log_2 n}$ stays fairly stable for each algorithm (Quick about $0.0083$ to $0.0092$, Merge about $0.0156$ to $0.0162$, Heap about $0.0166$ to $0.0205$).
+
+## 5.3 Analysis Questions (10 Total)
+
+### Quick Sort - Question 4
+
+On random unique input, quick sort matched expected $O(n\log n)$ scaling in the measurements. The normalized value $\frac{t}{n\log_2 n}$ stayed near constant, from about $0.00786$ to $0.00834$ over $n=1000$ to $32000$. Runtime also grew from $78.333\,\mu s$ to $3926.000\,\mu s$, which tracks the increase in $n\log n$. This supports that the median-of-three pivot plus insertion cutoff is effective on random data.
+
+### Quick Sort - Question 5
+
+On equal-value input, quick sort behaved close to quadratic in this implementation. The normalized ratio $\frac{t}{n^2}$ stayed in a narrow band, from about $0.00128$ down to $0.00103$, while runtime jumped from $1278.667\,\mu s$ at $n=1000$ to $1057729.000\,\mu s$ at $n=32000$. This happens because Lomuto partition with condition `A[j] < pivot` creates highly unbalanced splits when many elements equal the pivot. So this variant has a clear worst-case risk despite good random-input performance.
+
+### Merge Sort - Question 6
+
+Measured comparison counts for merge sort scale proportionally to $n\log_2 n$. On random input, $\frac{\text{comparisons}}{n\log_2 n}$ ranged from about $0.872$ to $0.915$ as $n$ increased from $1000$ to $32000$. On equal input, the same ratio stayed around $0.504$ to $0.506$. The bounded ratios confirm $O(n\log n)$ comparison growth.
+
+### Merge Sort - Question 7
+
+Merge sort remains $O(n\log n)$ regardless of input order because it always performs balanced recursive splitting and linear merges per level. The measurements reflect this consistency: both random and equal cases rise smoothly without any blow-up. In contrast, quick sort is input sensitive in this implementation, and equal-input runs showed near-$O(n^2)$ growth. Therefore merge sort is more predictable across adversarial distributions.
+
+### Heap Sort - Question 8
+
+Heap sort showed $O(n\log n)$ scaling but was slower than quick sort on random input at the same sizes. In the benchmark table, at $n=50000$, heap sort took $13380\,\mu s$ while quick sort took $6818\,\mu s$, so heap sort was about $1.96\times$ slower. At $n=10000$, heap sort was $2213\,\mu s$ versus quick sort $1098\,\mu s$ (about $2.02\times$ slower). This is consistent with larger constant factors from sift-down swaps and less cache-friendly access.
+
+### Heap Sort - Question 9
+
+On random input, heap sort swap counts followed $n\log n$ very closely. The ratio $\frac{\text{swaps}}{n\log_2 n}$ stayed between about $0.914$ and $0.941$ from $n=1000$ to $32000$, while swaps grew from $9107$ to $450582$. On equal input, swaps were exactly $n-1$ in these runs (e.g., $999, 1999, \dots, 31999$), indicating linear behavior for that special case. So the measured random-case swap complexity supports the theoretical $O(n\log n)$ claim.
+
+### Counting Sort - Question 10
+
+Counting sort outperformed comparison sorts strongly when $k$ was small relative to $n$. With $k=1000$ and $n=32000$, counting sort was $342.000\,\mu s$, while merge and heap were $7118.667\,\mu s$ and $7859.333\,\mu s$. A $k$-sweep at fixed $n=32000$ showed runtime rising from $344.000\,\mu s$ at $k=1000$ to $7135.667\,\mu s$ at $k=10^6$, with count-array memory increasing from $4004$ bytes to $4000004$ bytes. This shows counting sort becomes impractical when $k$ is so large that $O(n+k)$ initialization and memory costs dominate.
+
+### Counting Sort - Question 11
+
+Counting sort is stable when the output placement loop runs right-to-left after prefix sums. If two equal keys occur at indices $i<j$, then index $j$ is placed in the later slot first and index $i$ is placed in the earlier slot, preserving their relative order. If placement is done left-to-right with the same decrement logic, equal keys are reversed and stability is lost. Stability is essential when counting sort is used as a subroutine in radix sort.
+
+### Radix Sort - Question 12
+
+For LSD radix sort, runtime is $O(d(n+b))$, so base choice trades off number of passes against per-pass overhead. With base $10$ and $\text{maxVal}=99999$, we get $d=5$ passes. At $n=32000$, radix was $2180.667\,\mu s$, faster than merge ($7229.333\,\mu s$) and heap ($7860.333\,\mu s$), but slower than counting sort ($958.000\,\mu s$) for the same key range. The data matches the model: multiple stable passes still beat comparison sorts here, but a single counting pass can be faster when feasible.
+
+### Radix Sort - Question 13
+
+Each digit pass in LSD radix sort must be stable so that ordering from less-significant digits is preserved. For example, with input $[21,22,11,12]$, a stable ones-digit pass gives $[21,11,22,12]$, and a stable tens-digit pass then yields fully sorted $[11,12,21,22]$. If the tens pass is unstable, items with the same tens digit can be permuted to produce outputs like $[12,11,22,21]$, which is not sorted. Therefore stability is not optional; it is required for correctness.
+
+## 5.4 Scenario-Based Algorithm Choice
+
+For (a) $n=1000$ integers in a 60 Hz game loop, I would choose quick sort because it had the lowest measured comparison-sort runtime ($84\,\mu s$) and very low constant cost on random unique data. For (b) sorting $500000$ player scores in range $0$ to $10000$, I would choose counting sort because the bounded key range makes $O(n+k)$ ideal, and counting sort was much faster than radix at large non-comparison sizes in the benchmark. For (c) sorting file names alphabetically, I would choose merge sort: counting/radix do not apply naturally to variable-length strings, and merge sort provides stable, predictable $O(n\log n)$ performance across inputs.
